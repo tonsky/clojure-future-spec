@@ -9,11 +9,11 @@ Add this to your project.clj:
 ```clj
 :dependencies [
   [org.clojure/clojure "1.8.0"]
-  [clojure-future-spec "1.9.0-alpha8"]
+  [clojure-future-spec "1.9.0-alpha8-1"]
 ]
 ```
 
-There’re three main namespaces:
+There’re four main namespaces:
 
 ### clojure.spec
 
@@ -29,6 +29,14 @@ Exact copy of `clojure.spec.gen` from corresponding Clojure 1.9 alpha:
 
 ```clj
 (require '[clojure.spec.gen :as spec.gen])
+```
+
+### clojure.spec.test
+
+Exact copy of `clojure.spec.test` from corresponding Clojure 1.9 alpha:
+
+```clj
+(require '[clojure.spec.test :as spec.test])
 ```
 
 ### clojure.future
