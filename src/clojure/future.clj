@@ -153,3 +153,9 @@
       (if (and s (< i n))
         (recur (inc i) (next s))
         i))))
+
+(defn StackTraceElement->vec
+  "Constructs a data representation for a StackTraceElement"
+  {:added "1.9"}
+  [^StackTraceElement o]
+  [(symbol (.getClassName o)) (symbol (.getMethodName o)) (.getFileName o) (.getLineNumber o)])
