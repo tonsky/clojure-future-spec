@@ -1648,7 +1648,7 @@ system property. Defaults to true."}
   *compile-asserts*
   (not= "false" (System/getProperty "clojure.spec.compile-asserts")))
 
-(def ^:dynamic ^:private __checkSpecAsserts (Boolean/getBoolean "clojure.spec.check-asserts"))
+(def ^:dynamic __checkSpecAsserts (Boolean/getBoolean "clojure.spec.check-asserts"))
 
 (defn check-asserts?
   "Returns the value set by check-asserts."
@@ -1691,7 +1691,7 @@ value of 'clojure.spec.check-asserts' system property, or false if not
 set. You can toggle check-asserts? with (check-asserts bool)."
   [spec x]
   (if *compile-asserts*
-    `(if clojure.lang.RT/checkSpecAsserts
+    `(if __checkSpecAsserts
        (assert* ~spec ~x)
        ~x)
     x))
