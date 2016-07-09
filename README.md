@@ -13,6 +13,15 @@ Add this to your project.clj:
 ]
 ```
 
+If you'll be using generators, make sure you have `test.check`, too:
+
+```clj
+:dependencies [
+  ...
+  [org.clojure/test.check "0.9.0"]
+]
+```
+
 There’re four main namespaces:
 
 ### clojure.spec
