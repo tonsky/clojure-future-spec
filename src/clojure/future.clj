@@ -159,3 +159,10 @@
   {:added "1.9"}
   [^StackTraceElement o]
   [(symbol (.getClassName o)) (symbol (.getMethodName o)) (.getFileName o) (.getLineNumber o)])
+
+(defn any?
+  "Returns true given any argument."
+  {:tag Boolean
+   :added "1.9"}
+  [x] true)
+

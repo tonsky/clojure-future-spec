@@ -9,7 +9,7 @@ Add this to your project.clj:
 ```clj
 :dependencies [
   [org.clojure/clojure "1.8.0"]
-  [clojure-future-spec "1.9.0-alpha9-1"]
+  [clojure-future-spec "1.9.0-alpha10"]
 ]
 ```
 

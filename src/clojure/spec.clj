@@ -157,7 +157,10 @@
 (defn with-gen
   "Takes a spec and a no-arg, generator-returning fn and returns a version of that spec that uses that generator"
   [spec gen-fn]
-  (with-gen* (specize spec) gen-fn))
+  (let [spec (reg-resolve spec)]
+    (if (regex? spec)
+      (assoc spec ::gfn gen-fn)
+      (with-gen* (specize spec) gen-fn))))
 
 (defn explain-data* [spec path via in x]
   (let [probs (explain* (specize spec) path via in x)]
@@ -220,8 +223,9 @@
   [spec overrides path rmap form]
   ;;(prn {:spec spec :over overrides :path path :form form})
   (let [spec (specize spec)]
-    (if-let [g (c/or (get overrides (c/or (spec-name spec) spec))
-                     (get overrides path)
+    (if-let [g (c/or (when-let [gfn (c/or (get overrides (c/or (spec-name spec) spec))
+                                          (get overrides path))]
+                       (gfn))
                      (gen* spec overrides path rmap))]
       (gen/such-that #(valid? spec %) g 100)
       (let [abbr (abbrev form)]
@@ -231,8 +235,8 @@
 (defn gen
   "Given a spec, returns the generator for it, or throws if none can
   be constructed. Optionally an overrides map can be provided which
-  should map spec names or paths (vectors of keywords) to
-  generators. These will be used instead of the generators at those
+  should map spec names or paths (vectors of keywords) to no-arg
+  generator-creating fns. These will be used instead of the generators at those
   names/paths. Note that parent generator (in the spec or overrides
   map) will supersede those of any subtrees. A generator for a regex
   op must always return a sequential collection (i.e. a generator for
@@ -1384,7 +1388,7 @@
 
 (defn- re-gen [p overrides path rmap f]
   ;;(prn {:op op :ks ks :forms forms})
-  (let [{:keys [::op ps ks p1 p2 forms splice ret id] :as p} (reg-resolve! p)
+  (let [{:keys [::op ps ks p1 p2 forms splice ret id ::gfn] :as p} (reg-resolve! p)
         rmap (if id (inck rmap id) rmap)
         ggens (fn [ps ks forms]
                 (let [gen (fn [p k f]
@@ -1398,6 +1402,8 @@
             (case op
                   (:accept nil) (gen/fmap vector g)
                   g))
+          (when gfn
+            (gfn))
           (when p
             (case op
                   ::accept (if (= ret ::nil)
@@ -1542,7 +1548,6 @@
      (describe* [_] `(fspec :args ~aform :ret ~rform :fn ~fform)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; non-primitives ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(clojure.spec/def ::any (spec (constantly true) :gen gen/any))
 (clojure.spec/def ::kvs->map (conformer #(zipmap (map ::k %) (map ::v %)) #(map (fn [[k v]] {::k k ::v v}) %)))
 
 (defmacro keys*
@@ -1560,7 +1565,9 @@
   user=> (s/conform (s/cat :i1 integer? :m (s/keys* :req-un [::a ::c]) :i2 integer?) [42 :a 1 :c 2 :d 4 99])
   {:i1 42, :m {:a 1, :c 2, :d 4}, :i2 99}"
   [& kspecs]
-  `(clojure.spec/& (* (cat ::k keyword? ::v ::any)) ::kvs->map (keys ~@kspecs)))
+  `(let [mspec# (keys ~@kspecs)]
+     (with-gen (clojure.spec/& (* (cat ::k keyword? ::v any?)) ::kvs->map mspec#)
+       (fn [] (gen/fmap (fn [m#] (apply concat m#)) (gen mspec#))))))
 
 (defmacro nilable
   "returns a spec that accepts nil and values satisfiying pred"
