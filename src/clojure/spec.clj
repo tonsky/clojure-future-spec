@@ -1827,7 +1827,7 @@
   [& {:keys [infinite? NaN? min max]
     :or {infinite? true NaN? true}
     :as m}]
-  `(spec (and c/double?
+  `(spec (and double?
               ~@(when-not infinite? '[#(not (Double/isInfinite %))])
               ~@(when-not NaN? '[#(not (Double/isNaN %))])
               ~@(when max `[#(<= % ~max)])
