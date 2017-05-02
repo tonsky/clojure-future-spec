@@ -16,7 +16,7 @@ Add this to your project.clj:
 
 There’re four main namespaces:
 
-### clojure.spec.aplha
+### clojure.spec.alpha
 
 Exact copy of clojure.spec.alpha from corresponding Clojure Spec alpha:
 
