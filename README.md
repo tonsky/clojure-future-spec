@@ -9,14 +9,14 @@ Add this to your project.clj:
 ```clj
 :dependencies [
   [org.clojure/clojure "1.8.0"]
-  [clojure-future-spec "1.9.0-alpha16"]
+  [clojure-future-spec "1.9.0-alpha16-1"]
   [org.clojure/test.check "0.9.0"] ;; only if you need generators
 ]
 ```
 
 There’re four main namespaces:
 
-### clojure.spec.aplha
+### clojure.spec.alpha
 
 Exact copy of clojure.spec.alpha from corresponding Clojure Spec alpha:
 

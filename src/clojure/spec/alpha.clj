@@ -793,7 +793,7 @@
      (conform* [_ m]
                (if (keys-pred m)
                  (let [reg (registry)]
-                   (loop [ret m, [[k v] & ks :as keys] m]
+                   (loop [ret m, [[k v] & ks :as keys] (seq m)]
                      (if keys
                        (let [sname (keys->specnames k)]
                          (if-let [s (get reg sname)]
