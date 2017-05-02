@@ -6,10 +6,10 @@
 ;   the terms of this license.
 ;   You must not remove this notice, or any other, from this software.
 
-(ns clojure.spec
+(ns clojure.spec.alpha
   (:refer-clojure :exclude [+ * and assert or cat def keys merge])
   (:require [clojure.walk :as walk]
-            [clojure.spec.gen :as gen]
+            [clojure.spec.gen.alpha :as gen]
             [clojure.string :as str]
             [clojure.future :refer :all]))
 
@@ -73,7 +73,7 @@
 (defn spec?
   "returns x if x is a spec object, else logical false"
   [x]
-  (when (instance? clojure.spec.Spec x)
+  (when (instance? clojure.spec.alpha.Spec x)
     x))
 
 (defn regex?
@@ -144,10 +144,9 @@
   [ret]
   (identical? ::invalid ret))
 
-
 (defn conform
-  "Given a spec and a value, returns :clojure.spec/invalid if value does not match spec,
-  else the (possibly destructured) value."
+  "Given a spec and a value, returns :clojure.spec.alpha/invalid 
+	if value does not match spec, else the (possibly destructured) value."
   [spec x]
   (conform* (specize spec) x))
 
@@ -551,7 +550,6 @@
                        (conj `(c/or (empty? ~gx) (apply distinct? ~gx))))]
     `(every-impl '~pred ~pred ~(assoc nopts ::cpred `(fn* [~gx] (c/and ~@cpreds))) ~gen)))
 
-
 (defmacro every-kv
   "like 'every' but takes separate key and val preds and works on associative collections.
 
@@ -652,7 +650,7 @@
 
 (defmacro conformer
   "takes a predicate function with the semantics of conform i.e. it should return either a
-  (possibly converted) value or :clojure.spec/invalid, and returns a
+  (possibly converted) value or :clojure.spec.alpha/invalid, and returns a
   spec that uses it as a predicate/conformer. Optionally takes a
   second fn that does unform of result of first"
   ([f] `(spec-impl '(conformer ~(res f)) ~f nil true))
@@ -700,7 +698,6 @@
                      (with-out-str (explain-out ed)))
                    ed)))))))
 
-
 (defmacro fdef
   "Takes a symbol naming a function, and one or more of the following:
 
@@ -717,7 +714,7 @@
   by calling get-spec with the var or fully-qualified symbol.
 
   Once registered, function specs are included in doc, checked by
-  instrument, tested by the runner clojure.spec.test/check, and (if
+  instrument, tested by the runner clojure.spec.test.alpha/check, and (if
   a macro) used to explain errors during macroexpansion.
 
   Note that :fn specs require the presence of :args and :ret specs to
@@ -734,7 +731,7 @@
                  :sym symbol?)
     :ret symbol?)"
   [fn-sym & specs]
-  `(clojure.spec/def ~fn-sym (clojure.spec/fspec ~@specs)))
+  `(clojure.spec.alpha/def ~fn-sym (clojure.spec.alpha/fspec ~@specs)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; impl ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn- recur-limit? [rmap id path k]
@@ -796,7 +793,7 @@
      (conform* [_ m]
                (if (keys-pred m)
                  (let [reg (registry)]
-                   (loop [ret m, [[k v] & ks :as keys] (seq m)]
+                   (loop [ret m, [[k v] & ks :as keys] m]
                      (if keys
                        (let [sname (keys->specnames k)]
                          (if-let [s (get reg sname)]
@@ -879,7 +876,7 @@
        Specize
        (specize* [s] s)
        (specize* [s _] s)
-
+       
        Spec
        (conform* [_ x] (let [ret (pred x)]
                          (if cpred?
@@ -915,7 +912,7 @@
         Specize
         (specize* [s] s)
         (specize* [s _] s)
-
+        
         Spec
         (conform* [_ x] (if-let [pred (predx x)]
                           (dt pred x form)
@@ -1155,7 +1152,7 @@
    Specize
    (specize* [s] s)
    (specize* [s _] s)
-
+   
    Spec
    (conform* [_ x] (let [ms (map #(dt %1 x %2) preds forms)]
                      (if (some invalid? ms)
@@ -1229,7 +1226,7 @@
                         ret
                         (assoc ret (nth (if conform-keys cv v) 0) (nth cv 1))))
                     identity]
-                  
+
                    (c/or (list? conform-into) (seq? conform-into) (c/and (not conform-into) (c/or (list? x) (seq? x))))
                    [(constantly ()) addcv reverse]
 
@@ -1497,7 +1494,7 @@
       (case op
             ::accept nil
             nil p
-            ::amp (list* 'clojure.spec/& (op-describe p1) forms)
+            ::amp (list* 'clojure.spec.alpha/& (op-describe p1) forms)
             ::pcat (if rep+
                      (list `+ rep+)
                      (cons `cat (mapcat vector (c/or (seq ks) (repeat :_)) forms)))
@@ -1736,7 +1733,7 @@
      (describe* [_] `(fspec :args ~aform :ret ~rform :fn ~fform)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; non-primitives ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(clojure.spec/def ::kvs->map (conformer #(zipmap (map ::k %) (map ::v %)) #(map (fn [[k v]] {::k k ::v v}) %)))
+(clojure.spec.alpha/def ::kvs->map (conformer #(zipmap (map ::k %) (map ::v %)) #(map (fn [[k v]] {::k k ::v v}) %)))
 
 (defmacro keys*
   "takes the same arguments as spec/keys and returns a regex op that matches sequences of key/values,
@@ -1754,7 +1751,7 @@
   {:i1 42, :m {:a 1, :c 2, :d 4}, :i2 99}"
   [& kspecs]
   `(let [mspec# (keys ~@kspecs)]
-     (with-gen (clojure.spec/& (* (cat ::k keyword? ::v any?)) ::kvs->map mspec#)
+     (with-gen (clojure.spec.alpha/& (* (cat ::k keyword? ::v any?)) ::kvs->map mspec#)
        (fn [] (gen/fmap (fn [m#] (apply concat m#)) (gen mspec#))))))
 
 (defn ^:skip-wiki nonconforming
@@ -1938,5 +1935,4 @@ set. You can toggle check-asserts? with (check-asserts bool)."
        (assert* ~spec ~x)
        ~x)
     x))
-
 

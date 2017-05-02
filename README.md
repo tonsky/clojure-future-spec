@@ -9,35 +9,35 @@ Add this to your project.clj:
 ```clj
 :dependencies [
   [org.clojure/clojure "1.8.0"]
-  [clojure-future-spec "1.9.0-alpha15"]
+  [clojure-future-spec "1.9.0-alpha16"]
   [org.clojure/test.check "0.9.0"] ;; only if you need generators
 ]
 ```
 
 There’re four main namespaces:
 
-### clojure.spec
+### clojure.spec.aplha
 
-Exact copy of clojure.spec from corresponding Clojure 1.9 alpha:
+Exact copy of clojure.spec.alpha from corresponding Clojure Spec alpha:
 
 ```clj
-(require '[clojure.spec :as spec])
+(require '[clojure.spec.alpha :as spec])
 ```
 
-### clojure.spec.gen
+### clojure.spec.gen.alpha
 
-Exact copy of `clojure.spec.gen` from corresponding Clojure 1.9 alpha:
+Exact copy of `clojure.spec.gen.alpha` from corresponding Clojure Spec alpha:
 
 ```clj
-(require '[clojure.spec.gen :as spec.gen])
+(require '[clojure.spec.gen.alpha :as spec.gen])
 ```
 
-### clojure.spec.test
+### clojure.spec.test.alpha
 
-Exact copy of `clojure.spec.test` from corresponding Clojure 1.9 alpha:
+Exact copy of `clojure.spec.test.alpha` from corresponding Clojure Spec alpha:
 
 ```clj
-(require '[clojure.spec.test :as spec.test])
+(require '[clojure.spec.test.alpha :as spec.test])
 ```
 
 ### clojure.future

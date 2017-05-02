@@ -1,7 +1,6 @@
-(ns ^{:skip-wiki true} clojure.core.specs
-  (:require
-    [clojure.spec :as s]
-    [clojure.future :refer :all]))
+(ns ^{:skip-wiki true} clojure.core.specs.alpha
+  (:require [clojure.spec.alpha :as s]
+            [clojure.future :refer :all]))
 
 ;;;; destructure
 
