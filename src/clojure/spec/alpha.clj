@@ -198,7 +198,9 @@
 (defn explain-data* [spec path via in x]
   (let [probs (explain* (specize spec) path via in x)]
     (when-not (empty? probs)
-      {::problems probs})))
+      {::problems probs
+       ::spec spec
+       ::value x})))
 
 (defn explain-data
   "Given a spec and a value x which ought to conform, returns nil if x
@@ -213,9 +215,9 @@
   "Default printer for explain-data. nil indicates a successful validation."
   [ed]
   (if ed
-    (do
+    (let [problems (sort-by #(- (count (:path %))) (::problems ed))]
       ;;(prn {:ed ed})
-      (doseq [{:keys [path pred val reason via in] :as prob}  (::problems ed)]
+      (doseq [{:keys [path pred val reason via in] :as prob} problems]
         (when-not (empty? in)
           (print "In:" (pr-str in) ""))
         (print "val: ")
@@ -605,7 +607,7 @@
   "Returns a regex op that matches zero or one value matching
   pred. Produces a single value (not a collection) if matched."
   [pred-form]
-  `(maybe-impl ~pred-form '~pred-form))
+  `(maybe-impl ~pred-form '~(res pred-form)))
 
 (defmacro alt
   "Takes key+pred pairs, e.g.
@@ -671,7 +673,7 @@
   Optionally takes :gen generator-fn, which must be a fn of no args
   that returns a test.check generator."
   
-  [& {:keys [args ret fn gen]}]
+  [& {:keys [args ret fn gen] :or {ret `any?}}]
   `(fspec-impl (spec ~args) '~(res args)
                (spec ~ret) '~(res ret)
                (spec ~fn) '~(res fn) ~gen))
@@ -775,7 +777,7 @@
   (let [pred (maybe-spec pred)]
     (if (spec? pred)
       (explain* pred path (if-let [name (spec-name pred)] (conj via name) via) in v)
-      [{:path path :pred (abbrev form) :val v :via via :in in}])))
+      [{:path path :pred form :val v :via via :in in}])))
 
 (defn ^:skip-wiki map-spec-impl
   "Do not call this directly, use 'spec' with a map argument"
@@ -821,7 +823,7 @@
                  [{:path path :pred 'map? :val x :via via :in in}]
                  (let [reg (registry)]
                    (apply concat
-                          (when-let [probs (->> (map (fn [pred form] (when-not (pred x) (abbrev form)))
+                          (when-let [probs (->> (map (fn [pred form] (when-not (pred x) form))
                                                      pred-exprs pred-forms)
                                                 (keep identity)
                                                 seq)]
@@ -889,7 +891,7 @@
                         x))
        (explain* [_ path via in x]
                  (when (invalid? (dt pred x form cpred?))
-                   [{:path path :pred (abbrev form) :val x :via via :in in}]))
+                   [{:path path :pred form :val x :via via :in in}]))
        (gen* [_ _ _ _] (if gfn
                          (gfn)
                          (gen/gen-for-pred pred)))
@@ -925,7 +927,7 @@
                         path (conj path dv)]
                     (if-let [pred (predx x)]
                       (explain-1 form pred path via in x)
-                      [{:path path :pred (abbrev form) :val x :reason "no method" :via via :in in}])))
+                      [{:path path :pred form :val x :reason "no method" :via via :in in}])))
         (gen* [_ overrides path rmap]
               (if gfn
                 (gfn)
@@ -1268,7 +1270,15 @@
                             (c/or (nil? vseq) (= i limit)) x
                             (valid? spec v) (recur (inc i) vs)
                             :else ::invalid)))))))
-        (unform* [_ x] x)
+        (unform* [_ x]
+                 (if conform-all
+                   (let [spec @spec
+                         [init add complete] (cfns x)]
+                     (loop [ret (init x), i 0, [v & vs :as vseq] (seq x)]
+                       (if (>= i (c/count x))
+                         (complete ret)
+                         (recur (add ret i v (unform* spec v)) (inc i) vs))))
+                   x))
         (explain* [_ path via in x]
                   (c/or (coll-prob x kind kind-form distinct count min-count max-count
                                    path via in)
@@ -1499,7 +1509,7 @@
                      (list `+ rep+)
                      (cons `cat (mapcat vector (c/or (seq ks) (repeat :_)) forms)))
             ::alt (if maybe
-                    (list `? (res maybe))
+                    (list `? maybe)
                     (cons `alt (mapcat vector ks forms)))
             ::rep (list (if splice `+ `*) forms)))))
 
@@ -1511,7 +1521,7 @@
         insufficient (fn [path form]
                        [{:path path
                          :reason "Insufficient input"
-                         :pred (abbrev form)
+                         :pred form
                          :val ()
                          :via via
                          :in in}])]
@@ -1626,14 +1636,14 @@
             (op-explain (op-describe p) p path via (conj in i) (seq data))
             [{:path path
               :reason "Extra input"
-              :pred (abbrev (op-describe re))
+              :pred (op-describe re)
               :val data
               :via via
               :in (conj in i)}])
           (c/or (op-explain (op-describe p) p path via (conj in i) (seq data))
                 [{:path path
                   :reason "Extra input"
-                  :pred (abbrev (op-describe p))
+                  :pred (op-describe p)
                   :val data
                   :via via
                   :in (conj in i)}]))))))
@@ -1655,7 +1665,7 @@
    (explain* [_ path via in x]
              (if (c/or (nil? x) (coll? x))
                (re-explain path via in re (seq x))
-               [{:path path :pred (abbrev (op-describe re)) :val x :via via :in in}]))
+               [{:path path :pred (op-describe re) :val x :via via :in in}]))
    (gen* [_ overrides path rmap]
          (if gfn
            (gfn)
@@ -1825,8 +1835,10 @@
   ([sym n] (exercise-fn sym n (get-spec sym)))
   ([sym-or-f n fspec]
      (let [f (if (symbol? sym-or-f) (resolve sym-or-f) sym-or-f)]
-       (for [args (gen/sample (gen (:args fspec)) n)]
-         [args (apply f args)]))))
+       (if-let [arg-spec (c/and fspec (:args fspec))]
+         (for [args (gen/sample (gen arg-spec) n)]
+           [args (apply f args)])
+         (throw (Exception. "No :args spec found, can't generate"))))))
 
 (defn inst-in-range?
   "Return true if inst at or after start and before end"
@@ -1848,13 +1860,14 @@
                 (gen/large-integer* {:min st# :max et#}))))))
 
 (defn int-in-range?
-  "Return true if start <= val and val < end"
+  "Return true if start <= val, val < end and val is a fixed
+  precision integer."
   [start end val]
   (c/and int? (<= start val) (< val end)))
 
 (defmacro int-in
-  "Returns a spec that validates ints in the range from start
-(inclusive) to end (exclusive)."
+  "Returns a spec that validates fixed precision integers in the
+  range from start (inclusive) to end (exclusive)."
   [start end]
   `(spec (and int? #(int-in-range? ~start ~end %))
      :gen #(gen/large-integer* {:min ~start :max (dec ~end)})))
