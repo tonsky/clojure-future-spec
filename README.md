@@ -2,17 +2,21 @@
 
 A backport of `clojure.spec` for Clojure 1.8.
 
-## Usage
+> **NEW!** `clojure-future-spec` is now safe to use from both 1.8 and 1.9+ environments. It’ll add nothing but won’t raise any conflicts either
 
-Add this to your project.clj:
+## Setup
+
+For 1.8 projects, add this to your project.clj:
 
 ```clj
 :dependencies [
   [org.clojure/clojure "1.8.0"]
-  [clojure-future-spec "1.9.0-alpha16-1"]
+  [clojure-future-spec "1.9.0-alpha17"]
   [org.clojure/test.check "0.9.0"] ;; only if you need generators
 ]
 ```
+
+## Usage
 
 There’re four main namespaces:
 
@@ -47,6 +51,14 @@ Copy of all new functions added to `clojure.core` in Clojure 1.9 (like `boolean?
 ```clj
 (require '[clojure.future :refer :all])
 ```
+
+*NEW!* `clojure.future` will define nothing when evaluated in 1.9+ environment. You can now write libraries that do this:
+
+```clj
+(require '[clojure.future :refer all])
+```
+
+and it’ll work in both 1.8 and 1.9+ without any conflicts.
 
 ## License
 

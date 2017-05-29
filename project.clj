@@ -1,4 +1,4 @@
-(defproject clojure-future-spec "1.9.0-alpha16-1"
+(defproject clojure-future-spec "1.9.0-alpha17"
   :description "Backport of clojure.spec for Clojure 1.8"
   :url "https://github.com/tonsky/clojure-future-spec"
   :license {:name "Eclipse Public License"
