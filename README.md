@@ -55,7 +55,7 @@ Copy of all new functions added to `clojure.core` in Clojure 1.9 (like `boolean?
 *NEW!* `clojure.future` will define nothing when evaluated in 1.9+ environment. You can now write libraries that do this:
 
 ```clj
-(require '[clojure.future :refer all])
+(require '[clojure.future :refer :all])
 ```
 
 and it’ll work in both 1.8 and 1.9+ without any conflicts.
