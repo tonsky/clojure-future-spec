@@ -1,4 +1,4 @@
-(defproject clojure-future-spec "1.9.0-alpha17"
+(defproject clojure-future-spec "1.9.0-beta2"
   :description "Backport of clojure.spec for Clojure 1.8"
   :url "https://github.com/tonsky/clojure-future-spec"
   :license {:name "Eclipse Public License"
@@ -8,7 +8,7 @@
 
   :profiles {
     :1.9 {
-      :dependencies [[org.clojure/clojure "1.9.0-alpha17"
+      :dependencies [[org.clojure/clojure "1.9.0-beta2"
                        :exclusions [org.clojure/specs.alpha
                                     org.clojure/core.specs.alpha]]]
       :test-paths ^:replace ["test" "test19"]

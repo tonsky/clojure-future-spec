@@ -191,3 +191,43 @@
               (reduced {::halt (if retf (retf (rf result) input) input)})
               (rf result input)))))))
 
+(defn swap-vals! 
+  "Atomically swaps the value of atom to be: 
+  (apply f current-value-of-atom args). Note that f may be called 
+  multiple times, and thus should be free of side effects. 
+  Returns [old new], the value of the atom before and after the swap." 
+  {:added "1.9"}
+  (^clojure.lang.IPersistentVector [^clojure.lang.IAtom atom f] 
+    (loop [oldval @atom]
+      (let [newval (f oldval)]
+        (if (.compareAndSet atom oldval newval)
+          [oldval newval]
+          (recur @atom)))))
+  (^clojure.lang.IPersistentVector [^clojure.lang.IAtom atom f x] 
+    (loop [oldval @atom]
+      (let [newval (f oldval x)]
+        (if (.compareAndSet atom oldval newval)
+          [oldval newval]
+          (recur @atom)))))
+  (^clojure.lang.IPersistentVector [^clojure.lang.IAtom atom f x y] 
+    (loop [oldval @atom]
+      (let [newval (f oldval x y)]
+        (if (.compareAndSet atom oldval newval)
+          [oldval newval]
+          (recur @atom)))))
+  (^clojure.lang.IPersistentVector [^clojure.lang.IAtom atom f x y & args] 
+    (loop [oldval @atom]
+      (let [newval (apply f oldval x y args)]
+        (if (.compareAndSet atom oldval newval)
+          [oldval newval]
+          (recur @atom))))))
+
+(defn reset-vals! 
+  "Sets the value of atom to newval. Returns [old new], the value of the 
+   atom before and after the reset." 
+  {:added "1.9"}
+  (^clojure.lang.IPersistentVector [^clojure.lang.IAtom atom newval] 
+    (loop [oldval @atom]
+      (if (.compareAndSet atom oldval newval)
+        [oldval newval]
+        (recur @atom)))))

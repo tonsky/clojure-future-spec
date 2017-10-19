@@ -11,7 +11,7 @@ For 1.8 projects, add this to your project.clj:
 ```clj
 :dependencies [
   [org.clojure/clojure "1.8.0"]
-  [clojure-future-spec "1.9.0-alpha17"]
+  [clojure-future-spec "1.9.0-beta2"]
   [org.clojure/test.check "0.9.0"] ;; only if you need generators
 ]
 ```
