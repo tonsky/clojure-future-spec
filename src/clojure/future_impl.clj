@@ -114,11 +114,6 @@
   {:added "1.9"}
   [x] (instance? Double x))
 
-(defn bigdec?
-  "Return true if x is a BigDecimal"
-  {:added "1.9"}
-  [x] (instance? java.math.BigDecimal x))
-
 (defn bytes?
   "Return true if x is a byte array"
   {:added "1.9"}
